@@ -1,0 +1,178 @@
+/* Animation classes */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.animate-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Delay animation for better sequence */
+.animate-delay-100 {
+    transition-delay: 0.1s;
+}
+
+.animate-delay-200 {
+    transition-delay: 0.2s;
+}
+
+.animate-delay-300 {
+    transition-delay: 0.3s;
+}
+
+.animate-delay-400 {
+    transition-delay: 0.4s;
+}
+
+.animate-delay-500 {
+    transition-delay: 0.5s;
+}
+
+/* Pulse animation for CTA buttons */
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(234, 67, 53, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(234, 67, 53, 0);
+    }
+}
+
+/* Discount badge animations */
+.discount-badge {
+    position: relative;
+    overflow: hidden;
+}
+
+.discount-badge:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 30%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: skewX(-25deg);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% {
+        left: -50%;
+    }
+    100% {
+        left: 125%;
+    }
+}
+
+/* Enhanced pricing boxes */
+.pricing-box {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pricing-box:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* FAQ toggle animations */
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.faq-answer.active {
+    max-height: 500px;
+}
+
+/* Enhanced modal styling */
+.payment-modal {
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Navigation styling */
+nav {
+    transition: all 0.3s ease;
+}
+
+nav.sticky {
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Make sure body doesn't scroll when modal is open */
+body.overflow-hidden {
+    overflow: hidden;
+}
+
+/* Testimonial card styling */
+.testimonial-card {
+    position: relative;
+}
+
+.testimonial-card:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 20px;
+    font-size: 80px;
+    color: rgba(66, 133, 244, 0.1);
+    font-family: Georgia, serif;
+    line-height: 1;
+}
+
+/* Improved form focus states */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #4285F4;
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .countdown-item {
+        width: 50px;
+        height: 60px;
+    }
+    
+    .hero-section {
+        padding-top: 100px;
+    }
+}
+
+/* Button animations */
+.btn-hover-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-hover-effect:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-hover-effect:hover:after {
+    left: 100%;
+}

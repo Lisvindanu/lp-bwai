@@ -2,11 +2,15 @@
 const ticketTypes = {
     'unpas': {
         price: 19999,
+        originalPrice: 35000,
+        discount: 43,
         title: 'Tiket Mahasiswa UNPAS',
         nimRequired: true
     },
     'umum': {
         price: 35000,
+        originalPrice: 50000,
+        discount: 30,
         title: 'Tiket Umum',
         nimRequired: false
     }
@@ -22,9 +26,12 @@ function showPaymentModal(type) {
     currentTicketType = type;
     const ticketInfo = ticketTypes[type];
     
-    // Set modal title
+    // Set modal title and price
     document.getElementById('modalTitle').textContent = ticketInfo.title;
-    document.getElementById('modalPrice').textContent = `Rp ${formatNumber(ticketInfo.price)}`;
+    const priceElements = document.querySelectorAll('#modalPrice');
+    priceElements.forEach(el => {
+        el.textContent = `Rp ${formatNumber(ticketInfo.price)}`;
+    });
     
     // Show/hide NIM field based on ticket type
     document.getElementById('nimContainer').style.display = ticketInfo.nimRequired ? 'block' : 'none';
@@ -34,11 +41,16 @@ function showPaymentModal(type) {
     document.getElementById('paymentStep').style.display = 'none';
     document.getElementById('successStep').style.display = 'none';
     document.getElementById('paymentModal').style.display = 'flex';
+    
+    // Add body class to prevent scrolling
+    document.body.classList.add('overflow-hidden');
 }
 
 // Close payment modal
 function closePaymentModal() {
     document.getElementById('paymentModal').style.display = 'none';
+    // Remove body class to allow scrolling
+    document.body.classList.remove('overflow-hidden');
 }
 
 // Format number with thousand separator
@@ -54,6 +66,32 @@ function isValidPhone(phone) {
 // Validate email
 function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// Toggle FAQ answer
+function toggleFaq(button) {
+    const answer = button.nextElementSibling;
+    const icon = button.querySelector('svg');
+    
+    if (answer.style.display === 'block') {
+        answer.style.display = 'none';
+        icon.classList.remove('rotate-180');
+    } else {
+        // Close all other FAQs
+        document.querySelectorAll('.faq-answer').forEach(item => {
+            if (item !== answer) {
+                item.style.display = 'none';
+            }
+        });
+        document.querySelectorAll('.faq-answer + button svg').forEach(item => {
+            if (item !== icon) {
+                item.classList.remove('rotate-180');
+            }
+        });
+        
+        answer.style.display = 'block';
+        icon.classList.add('rotate-180');
+    }
 }
 
 // Generate QR code
@@ -73,6 +111,32 @@ function generateQRCode(amount) {
     });
 }
 
+// Animate counting for statistics
+function animateCounters() {
+    const counterElements = document.querySelectorAll('.counter');
+    
+    counterElements.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target'));
+        const duration = 1500; // Animation duration in milliseconds
+        const startTimestamp = performance.now();
+        
+        const updateCounter = (timestamp) => {
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const currentValue = Math.floor(progress * target);
+            
+            counter.textContent = currentValue;
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target;
+            }
+        };
+        
+        requestAnimationFrame(updateCounter);
+    });
+}
+
 // Update countdown timer
 function updateCountdown() {
     const targetDate = new Date('May 17, 2025 12:30:00').getTime();
@@ -85,16 +149,54 @@ function updateCountdown() {
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
         
+        // Update hero countdown
         document.getElementById('days').textContent = days;
         document.getElementById('hours').textContent = hours;
         document.getElementById('minutes').textContent = minutes;
         document.getElementById('seconds').textContent = seconds;
+        
+        // Update registration countdown
+        document.getElementById('countdown-days').textContent = days;
+        document.getElementById('countdown-hours').textContent = hours;
+        document.getElementById('countdown-minutes').textContent = minutes;
+        document.getElementById('countdown-seconds').textContent = seconds;
     } else {
         document.getElementById('days').textContent = '0';
         document.getElementById('hours').textContent = '0';
         document.getElementById('minutes').textContent = '0';
         document.getElementById('seconds').textContent = '0';
+        
+        document.getElementById('countdown-days').textContent = '0';
+        document.getElementById('countdown-hours').textContent = '0';
+        document.getElementById('countdown-minutes').textContent = '0';
+        document.getElementById('countdown-seconds').textContent = '0';
     }
+}
+
+// Add scrolling animation for elements
+function animateOnScroll() {
+    const animatedElements = document.querySelectorAll('.animate-on-scroll');
+    
+    const isInViewport = (el) => {
+        const rect = el.getBoundingClientRect();
+        return (
+            rect.top <= (window.innerHeight || document.documentElement.clientHeight) * 0.8
+        );
+    };
+    
+    const handleScroll = () => {
+        animatedElements.forEach(el => {
+            if (isInViewport(el)) {
+                el.classList.add('animate-show');
+            }
+        });
+    };
+    
+    // Initial check
+    handleScroll();
+    
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
 }
 
 // Toggle mobile menu
@@ -103,8 +205,28 @@ function toggleMobileMenu() {
     navLinks.classList.toggle('active');
 }
 
+// Add sticky navbar on scroll
+function initStickyNav() {
+    const nav = document.querySelector('nav');
+    const navHeight = nav.offsetHeight;
+    
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            nav.classList.add('bg-white', 'shadow-md');
+        } else {
+            nav.classList.remove('shadow-md');
+        }
+    });
+}
+
 // Event Handlers
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize sticky nav
+    initStickyNav();
+    
+    // Initialize animations
+    animateOnScroll();
+    
     // Mobile menu toggle
     const menuBtn = document.querySelector('.menu-btn');
     if (menuBtn) {
@@ -121,7 +243,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
-                targetElement.scrollIntoView({
+                const navHeight = document.querySelector('nav').offsetHeight;
+                const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navHeight;
+                
+                window.scrollTo({
+                    top: targetPosition,
                     behavior: 'smooth'
                 });
                 
@@ -224,4 +350,20 @@ document.addEventListener('DOMContentLoaded', function() {
             closePaymentModal();
         }
     });
+    
+    // Animate counters when element is in viewport
+    if (document.querySelector('.counter')) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        document.querySelectorAll('.counter-section').forEach(section => {
+            observer.observe(section);
+        });
+    }
 });
