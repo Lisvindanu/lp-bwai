@@ -1,0 +1,503 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // Ticket types and prices
+        const ticketTypes = {
+            'unpas': {
+                price: 19999,
+                title: 'Tiket Mahasiswa UNPAS',
+                nimRequired: true
+            },
+            'umum': {
+                price: 35000,
+                title: 'Tiket Umum',
+                nimRequired: false
+            }
+        };
+        
+        let currentTicketType = null;
+        let registrationData = {};
+        
+        // Show payment modal
+        function showPaymentModal(type) {
+            if (!ticketTypes[type]) return;
+            
+            currentTicketType = type;
+            const ticketInfo = ticketTypes[type];
+            
+            // Set modal title
+            document.getElementById('modalTitle').textContent = ticketInfo.title;
+            document.getElementById('modalPrice').textContent = `Rp ${formatNumber(ticketInfo.price)}`;
+            
+            // Show/hide NIM field based on ticket type
+            document.getElementById('nimContainer').style.display = ticketInfo.nimRequired ? 'block' : 'none';
+            
+            // Show modal with registration form
+            document.getElementById('registrationStep').style.display = 'block';
+            document.getElementById('paymentStep').style.display = 'none';
+            document.getElementById('successStep').style.display = 'none';
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+        
+        // Close payment modal
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+        
+        // Format number with thousand separator
+        function formatNumber(number) {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        
+        // Validate phone number
+        function isValidPhone(phone) {
+            return /^08[1-9][0-9]{7,10}$/.test(phone);
+        }
+        
+        // Validate email
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        
+        // Generate QR code
+        function generateQRCode(amount) {
+            const qrContainer = document.getElementById('qrCodeContainer');
+            qrContainer.innerHTML = '';
+            
+            const qrData = `DANA Payment:Lisvindanu:${amount}:${registrationData.name}:${registrationData.email}`;
+            
+            new QRCode(qrContainer, {
+                text: qrData,
+                width: 180,
+                height: 180,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // Event Handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle registration form submission
+            document.getElementById('submitRegistrationBtn').addEventListener('click', function() {
+                const name = document.getElementById('buyerName').value.trim();
+                const email = document.getElementById('buyerEmail').value.trim();
+                const phone = document.getElementById('buyerPhone').value.trim();
+                const nim = document.getElementById('buyerNIM').value.trim();
+                
+                // Validate inputs
+                if (!name) {
+                    alert('Mohon masukkan nama lengkap');
+                    return;
+                }
+                
+                if (!email || !isValidEmail(email)) {
+                    alert('Mohon masukkan email yang valid');
+                    return;
+                }
+                
+                if (!phone || !isValidPhone(phone)) {
+                    alert('Mohon masukkan nomor WhatsApp yang valid (contoh: 08123456789)');
+                    return;
+                }
+                
+                if (ticketTypes[currentTicketType].nimRequired && !nim) {
+                    alert('Mohon masukkan NIM');
+                    return;
+                }
+                
+                // Store registration data
+                registrationData = {
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    nim: nim,
+                    ticketType: currentTicketType,
+                    price: ticketTypes[currentTicketType].price,
+                    registrationTime: new Date().toISOString()
+                };
+                
+                // In a real application, you would save this data to your database here
+                // saveRegistrationData(registrationData);
+                
+                // Generate QR code for payment
+                generateQRCode(registrationData.price);
+                
+                // Move to payment step
+                document.getElementById('registrationStep').style.display = 'none';
+                document.getElementById('paymentStep').style.display = 'block';
+            });
+            
+            // Handle back button
+            document.getElementById('backToFormBtn').addEventListener('click', function() {
+                document.getElementById('paymentStep').style.display = 'none';
+                document.getElementById('registrationStep').style.display = 'block';
+            });
+            
+            // Handle payment confirmation
+            document.getElementById('confirmPaymentBtn').addEventListener('click', function() {
+                const paymentProof = document.getElementById('paymentProof');
+                
+                if (!paymentProof.files || paymentProof.files.length === 0) {
+                    alert('Mohon upload bukti pembayaran');
+                    return;
+                }
+                
+                // In a real application, you would upload the payment proof and update status
+                // uploadPaymentProof(paymentProof.files[0], registrationData.id);
+                
+                // Move to success step
+                document.getElementById('paymentStep').style.display = 'none';
+                document.getElementById('successStep').style.display = 'block';
+            });
+            
+            // Handle success close button
+            document.getElementById('closeSuccessBtn').addEventListener('click', function() {
+                closePaymentModal();
+                
+                // Reset form fields
+                document.getElementById('buyerName').value = '';
+                document.getElementById('buyerEmail').value = '';
+                document.getElementById('buyerPhone').value = '';
+                document.getElementById('buyerNIM').value = '';
+                document.getElementById('paymentProof').value = '';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('paymentModal');
+                if (event.target === modal) {
+                    closePaymentModal();
+                }
+            });
+        });
+    </script>    <!-- Registration Modal -->
+    <div id="paymentModal" class="payment-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closePaymentModal()">&times;</span>
+            <h2 id="modalTitle" class="text-2xl font-bold mb-4 text-center"></h2>
+            
+            <!-- Step 1: Form -->
+            <div id="registrationStep">
+                <div class="mb-4">
+                    <label for="buyerName" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="buyerName" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Masukkan nama lengkap" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="buyerEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="buyerEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Masukkan email" required>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="buyerPhone" class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
+                    <input type="tel" id="buyerPhone" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Contoh: 08123456789" required>
+                </div>
+                
+                <div class="mb-4" id="nimContainer">
+                    <label for="buyerNIM" class="block text-sm font-medium text-gray-700 mb-1">NIM (untuk mahasiswa UNPAS)</label>
+                    <input type="text" id="buyerNIM" class="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Masukkan NIM">
+                </div>
+                
+                <button id="submitRegistrationBtn" class="w-full bg-google-blue hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+                    Lanjutkan ke Pembayaran
+                </button>
+            </div>
+            
+            <!-- Step 2: Payment -->
+            <div id="paymentStep" style="display: none;">
+                <p class="mb-3 text-center">Silakan lakukan pembayaran:</p>
+                <div class="flex justify-center mb-3">
+                    <div class="bg-gray-100 rounded-lg py-2 px-4">
+                        <p class="text-md text-center text-gray-700">Total Bayar</p>
+                        <p id="modalPrice" class="text-2xl font-bold text-center google-blue"></p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                    <p class="text-sm text-gray-700 mb-1">Detail Pembayaran:</p>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm text-gray-600">DANA</span>
+                        <span class="text-sm font-medium">Lisvindanu</span>
+                    </div>
+                    <div class="flex justify-between mb-3">
+                        <span class="text-sm text-gray-600">No. Dana</span>
+                        <span class="text-sm font-medium">081234567890</span>
+                    </div>
+                    
+                    <div id="qrCodeContainer" class="flex justify-center my-3">
+                        <!-- QR Code will be generated here -->
+                    </div>
+                    <p class="text-xs text-center text-gray-500 mt-1">Scan QR code diatas untuk pembayaran via DANA</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="paymentProof" class="block text-sm font-medium text-gray-700 mb-1">Upload Bukti Pembayaran</label>
+                    <input type="file" id="paymentProof" class="w-full px-3 py-2 border border-gray-300 rounded-md" accept="image/*">
+                    <p class="text-xs text-gray-500 mt-1">Format: JPG, PNG, atau PDF (max 5MB)</p>
+                </div>
+                
+                <button id="confirmPaymentBtn" class="w-full bg-google-green hover:bg-green-600 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+                    Konfirmasi Pembayaran
+                </button>
+                
+                <button id="backToFormBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md transition duration-300 mt-2">
+                    Kembali
+                </button>
+                
+                <p class="text-xs text-center text-gray-500 mt-3">Pembayaran akan diverifikasi dalam 1x24 jam kerja.</p>
+            </div>
+            
+            <!-- Step 3: Success -->
+            <div id="successStep" style="display: none;">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Pendaftaran Berhasil!</h3>
+                    <p class="text-gray-600 mb-4">Terima kasih atas pendaftaran Anda. Bukti pembayaran telah diterima dan sedang diverifikasi.</p>
+                    <p class="text-gray-600 mb-4">Mohon cek email Anda untuk informasi selanjutnya.</p>
+                    <button id="closeSuccessBtn" class="bg-google-blue hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-md transition duration-300">
+                        Selesai
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build with AI: Vertex AI Workshop - GDGoC UNPAS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .google-blue { color: #4285F4; }
+        .google-red { color: #EA4335; }
+        .google-yellow { color: #FBBC05; }
+        .google-green { color: #34A853; }
+        .bg-google-blue { background-color: #4285F4; }
+        .bg-google-red { background-color: #EA4335; }
+        .bg-google-yellow { background-color: #FBBC05; }
+        .bg-google-green { background-color: #34A853; }
+        body {
+            font-family: 'Google Sans', 'Roboto', sans-serif;
+            min-height: 100vh;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+        }
+        .payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 90%;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+        .close-modal:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="hero-section">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Logo Header -->
+            <div class="flex items-center mb-6">
+                <!-- Replace these placeholder images with your actual logo URLs -->
+                <img src="img/logo.png" alt="GDGoC Logo" class="h-12 mr-3" />
+                <span class="font-bold text-2xl">
+                    <span class="google-blue">Build with</span>
+                    <span class="google-red">AI</span>
+                </span>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex flex-col md:flex-row min-h-screen">
+                <!-- Left Side - Event Info -->
+                <div class="w-full md:w-1/2 flex flex-col justify-center p-4 md:p-8">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-6">
+                        <span class="google-blue">Build with AI:</span><br>
+                        <span class="google-red">Vertex AI</span> 
+                        <span class="google-green">Workshop</span>
+                    </h1>
+                    
+                    <p class="text-xl text-gray-700 mb-8">
+                        Hands-on workshop untuk mempelajari implementasi AI menggunakan Google Cloud dan Vertex AI.
+                    </p>
+                    
+                    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+                        <div class="flex items-center mb-4">
+                            <svg class="w-6 h-6 mr-3 google-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span class="text-lg font-medium">Sabtu, 17 Mei 2025</span>
+                        </div>
+                        
+                        <div class="flex items-center mb-4">
+                            <svg class="w-6 h-6 mr-3 google-yellow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-lg font-medium">12:30 - 18:00 WIB</span>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 mr-3 google-green" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span class="text-lg font-medium">Ruangan 602, Universitas Pasundan</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <!-- Replace this placeholder with your actual event image -->
+                        <img src="img/BWAI.png" alt="Vertex AI Workshop" class="w-full h-auto object-cover rounded-lg shadow-md" />
+                    </div>
+                </div>
+                
+                <!-- Right Side - Registration -->
+                <div class="w-full md:w-1/2 flex flex-col justify-center p-4 md:p-8 bg-gray-100 rounded-lg">
+                    <h2 class="text-3xl font-bold mb-6 text-center">Daftar Sekarang</h2>
+                    
+                    <!-- UNPAS Student Option -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-google-blue py-3 px-4">
+                            <h3 class="text-xl font-bold text-white">Mahasiswa UNPAS</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <span class="text-2xl font-bold google-blue">Rp 19.999</span>
+                                    <span class="block text-sm text-gray-500 mt-1">Terbatas 20 peserta</span>
+                                </div>
+                                <ul class="text-sm">
+                                    <li class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Material workshop
+                                    </li>
+                                    <li class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Google Cloud Credits
+                                    </li>
+                                    <li class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Sertifikat & konsumsi
+                                    </li>
+                                </ul>
+                            </div>
+                            <a href="#" class="block w-full bg-google-blue hover:bg-blue-600 text-white text-center font-bold py-3 px-4 rounded-md transition duration-300" onclick="showPaymentModal('unpas')">
+                                DAFTAR SEBAGAI MAHASISWA UNPAS
+                            </a>
+                            <p class="text-xs text-center text-gray-500 mt-2">* Wajib membawa KTM saat acara</p>
+                        </div>
+                    </div>
+                    
+                    <!-- General Public Option -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+                        <div class="bg-gray-800 py-3 px-4">
+                            <h3 class="text-xl font-bold text-white">Umum</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <span class="text-2xl font-bold text-gray-800">Rp 35.000</span>
+                                    <span class="block text-sm text-gray-500 mt-1">Terbatas 30 peserta</span>
+                                </div>
+                                <ul class="text-sm">
+                                    <li class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Material workshop
+                                    </li>
+                                    <li class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Google Cloud Credits
+                                    </li>
+                                    <li class="flex items-center">
+                                        <svg class="w-4 h-4 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Sertifikat & konsumsi
+                                    </li>
+                                </ul>
+                            </div>
+                            <a href="#" class="block w-full bg-gray-800 hover:bg-gray-900 text-white text-center font-bold py-3 px-4 rounded-md transition duration-300" onclick="showPaymentModal('umum')">
+                                DAFTAR SEBAGAI UMUM
+                            </a>
+                            <p class="text-xs text-center text-gray-500 mt-2">* Terbuka untuk siapapun</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Important Note -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-bold text-yellow-800 flex items-center mb-2">
+                            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            Penting!
+                        </h4>
+                        <ul class="text-sm space-y-1">
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-yellow-600 mt-0.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>Peserta <b>wajib membawa laptop</b> pribadi</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-yellow-600 mt-0.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>Gunakan <b>email yang sama</b> untuk pendaftaran</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Logo at the bottom -->
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-500 mb-2">Diselenggarakan oleh:</p>
+                        <div class="flex justify-center items-center">
+                            <!-- Replace this placeholder with your actual GDGoC UNPAS logo -->
+                            <img src="img\logo.png" alt="GDGoC UNPAS Logo" class="h-10" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
