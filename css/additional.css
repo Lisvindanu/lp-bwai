@@ -176,3 +176,97 @@ input:focus, select:focus, textarea:focus {
 .btn-hover-effect:hover:after {
     left: 100%;
 }
+
+/* Add these overrides to fix visibility issues */
+
+/* Fix for invisible sections */
+#schedule, #registration {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+/* Fix section backgrounds */
+#schedule {
+    background-color: #f9fafb !important;
+    color: #1f2937 !important;
+    position: relative;
+    z-index: 1;
+    padding: 4rem 0;
+}
+
+#schedule h2, #schedule h3, #schedule h4 {
+    color: #1f2937 !important;
+}
+
+#schedule p {
+    color: #4b5563 !important;
+}
+
+#registration {
+    background-color: #eff6ff !important;
+    color: #1f2937 !important;
+    position: relative;
+    z-index: 1;
+    padding: 4rem 0;
+}
+
+#registration h2, #registration h3, #registration h4 {
+    color: #1f2937 !important;
+}
+
+#registration p {
+    color: #4b5563 !important;
+}
+
+/* Fix z-index issues */
+.content-wrapper, .container {
+    position: relative;
+    z-index: 5;
+}
+
+/* Make sure cards and timelines are visible */
+.timeline-item, .bg-white {
+    position: relative;
+    z-index: 2;
+    background-color: white !important;
+}
+
+/* Fix animation issues */
+.animate-on-scroll.animate-show {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* Override any animations that might be causing issues */
+.animate-on-scroll {
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* Override conflicting styles that might hide sections */
+.py-16 {
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+}
+
+/* Fix for the pricing boxes */
+.pricing-box {
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Fix for the countdown timer */
+.countdown-item {
+    display: flex !important;
+    visibility: visible !important;
+}
+
+/* Fix for mobile menu */
+.nav-links.active {
+    display: flex !important;
+}
+

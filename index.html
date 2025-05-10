@@ -21,6 +21,39 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/additional.css">
     
+    <!-- CSS darurat untuk memastikan section terlihat -->
+    <style>
+        /* Fix untuk section yang tidak terlihat */
+        #schedule, #registration {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            height: auto !important;
+            overflow: visible !important;
+            position: relative !important;
+            z-index: 5 !important;
+        }
+        
+        /* Fix section backgrounds */
+        #schedule {
+            background-color: #f9fafb !important;
+            color: #1f2937 !important;
+            padding: 4rem 0 !important;
+        }
+        
+        #registration {
+            background-color: #eff6ff !important;
+            color: #1f2937 !important;
+            padding: 4rem 0 !important;
+        }
+        
+        /* Pastikan elemen animate-show muncul */
+        .animate-on-scroll.animate-show {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+    </style>
+    
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
@@ -55,6 +88,7 @@
         </div>
     </nav>
 
+    <!-- PERBAIKAN: Pastikan path menggunakan sections/ -->
     <!-- Include Hero Section -->
     <div include-html="sections/hero.html"></div>
 
@@ -64,10 +98,10 @@
     <!-- Include Benefits Section -->
     <div include-html="sections/benefits.html"></div>
 
-    <!-- Include Schedule Section -->
+    <!-- Include Schedule Section - PERBAIKAN: Gunakan path dengan prefix sections/ -->
     <div include-html="sections/schedule.html"></div>
 
-    <!-- Include Registration Section -->
+    <!-- Include Registration Section - PERBAIKAN: Gunakan path dengan prefix sections/ -->
     <div include-html="sections/registration.html"></div>
 
     <!-- Include Footer -->
@@ -83,9 +117,14 @@
         </svg>
     </button>
 
+    <!-- Script perbaikan path untuk sections -->
+    <script src="js/sections-fix.js"></script>
+    
     <!-- Include Scripts -->
     <script src="js/include-html.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/fix.js"></script>
+    
     <script>
         // ScrollToTop functionality
         document.addEventListener('DOMContentLoaded', function() {
@@ -110,7 +149,56 @@
             document.querySelectorAll('.section-title, .card, .timeline-item, .pricing-box').forEach((el, index) => {
                 el.classList.add('animate-on-scroll');
                 el.classList.add(`animate-delay-${(index % 5) + 1}00`);
+                // PERBAIKAN: Langsung tambahkan animate-show
+                el.classList.add('animate-show');
             });
+            
+            // PERBAIKAN: Jika include-html tidak bekerja, periksa setelah timeout
+            setTimeout(function() {
+                // Periksa apakah section schedule dan registration sudah dimuat
+                const scheduleSection = document.getElementById('schedule');
+                const registrationSection = document.getElementById('registration');
+                
+                console.log("Checking if sections loaded after timeout");
+                console.log("Schedule section exists: " + (scheduleSection !== null));
+                console.log("Registration section exists: " + (registrationSection !== null));
+                
+                if (!scheduleSection || !registrationSection) {
+                    console.log("Some sections failed to load, forcing manual load");
+                    
+                    // Tambahkan fallback untuk section yang hilang
+                    if (!scheduleSection) {
+                        console.log("Creating fallback for schedule section");
+                        // Load schedule section manually
+                        fetch('sections/schedule.html')
+                            .then(response => response.text())
+                            .then(html => {
+                                const div = document.createElement('div');
+                                div.innerHTML = html;
+                                document.getElementById('benefit').after(div);
+                            })
+                            .catch(error => console.error('Error loading schedule section:', error));
+                    }
+                    
+                    if (!registrationSection) {
+                        console.log("Creating fallback for registration section");
+                        // Load registration section manually
+                        fetch('sections/registration.html')
+                            .then(response => response.text())
+                            .then(html => {
+                                const div = document.createElement('div');
+                                div.innerHTML = html;
+                                const insertPoint = document.getElementById('schedule') || document.getElementById('benefit');
+                                if (insertPoint) {
+                                    insertPoint.after(div);
+                                } else {
+                                    document.querySelector('footer').before(div);
+                                }
+                            })
+                            .catch(error => console.error('Error loading registration section:', error));
+                    }
+                }
+            }, 3000);
         });
     </script>
 </body>
